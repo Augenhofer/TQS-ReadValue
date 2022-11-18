@@ -34,24 +34,30 @@ namespace TQS_Read
     class Program
     {
         public static string fileName = @"D:\Versandanalysen\TQSFile.txt";
+        //public static string fileName = @"c:\temp\TQSFile.txt";
         public static string text;
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         static void Main(string[] args)
         {
             var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
             XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
+            bool isNumeric = false;
 
             try
             {
                 text = File.ReadAllText(fileName);
                 string[] lines = text.Split(Environment.NewLine);
 
-                for (int i = 13; i < lines.Length; i++)
+                for (int i = 1; i < lines.Length; i++)
                 {
                     string[] tokens = lines[i].Split('|');
-                    text = tokens[3].ToString();
-                    if (tokens[3].ToString() != "   ")
-                        SaveData(tokens, log);
+                    if (tokens.Length > 3)
+                    {
+                        text = tokens[3].ToString();
+                        isNumeric = int.TryParse(tokens[1].ToString(), out int n);
+                        if (tokens[3].ToString() != "   "  && isNumeric == true)
+                            SaveData(tokens, log);
+                    }
                 }
             }
             catch (Exception e)
@@ -86,6 +92,8 @@ namespace TQS_Read
                 {
                     conn.Open();
                     int rowsAffected = cmd.ExecuteNonQuery();
+                    Console.Write("MSSQL rows affected: " + rowsAffected);
+                    log.Error("MSSQL rows affected: " + rowsAffected);
                     conn.Close();
                 }
                 catch (Exception e)
